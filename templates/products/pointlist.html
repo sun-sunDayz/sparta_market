@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load mathfilters %}
+{% load static %}
+{% block content %} 
+<style>
+    .product-pic{
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+    }
+    .protitle{
+        font-size: 20px;
+        color: black;
+    }
+    .plus-point{
+        color: green;
+    }
+    .minus-point{
+        color: red;
+    }
+</style>
+
+<div class="container customcon">
+    <div class="page-subject text-center">포인트 변동 내역</div>
+    <table class="customtable text-center">
+        <thead>
+            <tr>
+                <th scope="col">순번</th>
+                <th scope="col">사유</th>
+                <th scope="col">포인트 변동</th>
+                <th scope="col">누적 포인트</th>
+                <th scope="col">날짜</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in points %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>
+                    {{ p.reason }}
+                </td>
+                <td>
+                    {% if p.change_amount > 0 %}
+                        <span class="plus-point" id="point">
+                            + {{ p.change_amount }} Points
+                        </span>
+                    {% else %}
+                        <span class="minus-point" id="point">
+                            {{ p.change_amount }} Points
+                        </span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="accumulatePoint"></div>
+                </td>
+                <td>
+                    {{ p.created_at|date:"Y년 m월 d일 H시 i분" }}
+                </td>
+            </tr>
+            {% endfor %}
+            <tr>
+                <td colspan="4">
+                    현재 포인트
+                </td>
+                <td>
+                    {{ user.point }} Points
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function(){
+        const accumulatePoint = document.querySelectorAll('.accumulatePoint');
+        const pointElements = document.querySelectorAll('#point'); // #point 요소들을 한 번만 선택
+
+        let point = 0;
+
+        for (let index = accumulatePoint.length - 1; index >= 0; index--) {
+            const pointText = pointElements[index].textContent;
+            const number = parseInt(pointText.match(/\d+/)[0]); // 숫자 부분만 추출하여 정수로 변환
+            point += number;
+
+            console.log(pointText);
+            accumulatePoint[index].textContent = point + ' Points';
+        }
+    });
+</script>
+
+{% endblock %}

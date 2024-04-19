@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+    <style>
+        
+        .main-image{
+            width: 350px;
+            height: 250px;
+        }
+        .moogge{
+            color: rgb(52, 89, 255);
+        }
+        .intro{
+            margin-top: 100px;
+        }
+        .site-intro > a{
+            text-decoration: none;
+            color: rgb(185, 201, 255);
+        }
+        .site-intro > a:hover{
+            color: #e4be70;
+        }
+        
+    </style>
+    <div class="container text-center vertical intro">
+        <p class="moogge-intro">반가워, 나는 <b class="moogge">뭉게</b><sup>☁️</sup>야 </p>
+        <img class="main-image" src="{% static 'images/cloud.png' %}">
+        {% if user.is_authenticated %}
+            <p class="site-intro mt-4">
+                지친 하루, 쇼핑하면서 <b class="moogge">뭉게</b>진 인상을 풀어보자~ <br>
+                로그인도 했겠다, <a href="{% url 'products:index' %}">쇼핑</a>하러 가보자구!<br>
+            </p>
+        {% else %}
+            <p class="site-intro mt-4">
+                지친 하루, 쇼핑하면서 <b class="moogge">뭉게</b>진 인상을 풀어보자~ <br>
+                우선 <a href="{% url 'accounts:login' %}">로그인</a>먼저 해주라구~ 름 <br>
+            </p>
+        {% endif %}
+    </div>
+{% endblock %}

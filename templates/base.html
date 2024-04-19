@@ -1,0 +1,165 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <link rel="icon" href="{% static 'images/favi.png' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MOOGGE MALL</title>
+    <link href="{% static 'css/custom.css' %}" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Gaegu&family=Poor+Story&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Nanum+Gothic&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Jua&display=swap');
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 2; /* 다른 요소들보다 위에 표시되도록 설정 */
+        }
+        .nav-menus {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        body{
+            background-color: rgba(227, 234, 255, 0.72);
+            padding-top: 100px;
+        }
+        
+        .profile_smallpic{
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+
+        .cursor {
+            position: fixed;
+            width: 50px;
+            height: 50px;
+            background-image: url('{% static "images/cursor.gif" %}');
+            z-index: 1056;
+            background-size: cover;
+            pointer-events: none;
+        }
+        html{
+            height: 100vh;
+            
+        }
+        body{
+            margin: 0;
+            padding-bottom: 20px;
+            min-height: 100vh;
+        }
+        .logoimage{
+            width: 40px;
+            margin-left: 10px;
+        }
+        #fixedContent{
+            position: fixed;
+            top: 80px;
+            
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        #fixedAlert {
+            padding: 15px;
+            padding-left: 40px;
+            padding-right: 40px;
+            border-radius: 5px;
+            display: none;
+            color: white;
+        }
+        .tag-info{
+            background-color: rgb(206, 200, 200);
+        }
+        .tag-success{
+            background-color: rgb(172, 197, 168);
+        }
+        .tag-error{
+            background-color: rgb(205, 108, 108);
+        }
+        .add-point{
+            color: green;
+        }
+    </style>
+</head>
+
+
+
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="nav-menu" href="{% url 'accounts:index' %}">
+                <img class="logoimage" src="{% static 'images/sun.png' %}" alt="logo">
+            </a>
+
+            {% if user.is_authenticated %}
+                <div class="nav-menus">
+                    <a class="nav-menu" aria-current="page" href="{% url 'products:index' %}?stockOut=false">쇼핑</a>
+                    <li class="nav-menu dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            <img class="profile_smallpic" src="{{ user.getpic }}"> {{ user }}
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">프로필</a></li>
+                            <li><a class="dropdown-item" href="{% url 'products:pointlist' %}">포인트내역</a></li>
+                            <li><a class="dropdown-item" href="{% url 'products:myprodlist' %}">내상품관리</a></li>
+                            <li><a class="dropdown-item" href="{% url 'products:minelist' %}">찜목록</a></li>
+                            <li><a class="dropdown-item" href="{% url 'products:buylist' %}">구매목록</a></li>
+
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:logout' %}">로그아웃</a></li>
+                        </ul>
+                    </li>
+                </div>
+            {% else %}
+                <div class="nav-menus">
+                    <a class="nav-menu" aria-current="page" href="{% url 'accounts:login' %}">로그인</a>
+                    <a class="nav-menu" aria-current="page" href="{% url 'accounts:signup' %}">회원가입</a>
+                </div>
+            {% endif %}
+        </div>
+    </nav>
+    {% block content %}
+    
+    {% endblock %}
+
+    <div id="fixedContent">
+    {% for message in messages %}
+        <div id="fixedAlert" class="tag-{{message.tags}}">{{ message.message }}</div>
+    {% endfor %}
+    </div>
+
+    <script src="{% static 'js/custom.js' %}"></script>
+    <script>
+        const firstfocus = document.querySelector('.first-focus')
+        if(firstfocus){
+            firstfocus.focus();
+        }
+        
+        function showFixedAlert() {
+            document.getElementById("fixedAlert").style.display = "block";
+
+            setTimeout(function(){
+                document.getElementById("fixedAlert").style.transition = "opacity 1s";
+                document.getElementById("fixedAlert").style.opacity = "0";
+            }, 3000); 
+
+            setTimeout(function(){
+                document.getElementById("fixedAlert").style.display = "none";
+            }, 4000); 
+        }
+
+        showFixedAlert();
+    </script>
+</body>
+
+</html>

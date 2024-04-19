@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% load mathfilters %}
+{% block content %}
+<style>
+    .container {
+        margin-top: 50px;
+        width: 80%;
+    }
+
+    .badge-red {
+        background-color: red;
+        color: white;
+    }
+
+    .badge-orange {
+        background-color: orange;
+        color: white;
+    }
+
+    .badge-green {
+        background-color: green;
+        color: white;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+    }
+
+    .sale_price {
+        margin-left: 10px;
+        color: red;
+    }
+    .profile-icon{
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 10px;
+        object-fit: cover;
+    }
+    .info-table td{
+        font-size: 20px;
+        padding-bottom: 15px;
+    }
+    .info-table td:nth-child(1){
+        font-weight: bolder;
+        font-size: 24px;
+        color: white;
+        width: 20%;
+        text-shadow: 0px 0px 4px #0048ff;
+    }
+    .info-table td:nth-child(2){
+        padding-left: 40px;
+    }
+    .info-table{
+        background-color: transparent;
+        text-align: left;
+        padding: 20px;
+    }
+    .product-pic{
+        width: 100%;
+    }
+    .info-div{
+        margin-top: 20px;
+    }
+    .rating{
+        color: gold;
+        text-shadow: 0px 0px 6px skyblue;
+    }
+    .score-span{
+        margin-left: 20px;
+        font-size: 14px;
+    }
+    .likey-button{
+        background-color: transparent;
+        border: none;
+    }
+    .like-div span{
+        margin-left: 20px;
+        font-size: 18px;
+    }
+    .cusdropdown {
+        position: relative;
+        display: inline-block;
+        font-size: 14px;
+    }
+    .cusdropdown span{
+        font-size: 20px;
+    }
+    .cusdropdown-content {
+        display: none;
+        position: absolute;
+        background-color: #cdd6d5;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(193, 194, 246, 0.601);
+        z-index: 1;
+    }
+    .cusdropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+    }
+    .cusdropdown-content a:hover {
+        background-color: #f1f1f1;
+    }
+    .cusdropdown:hover .cusdropdown-content {
+        display: block;
+    }
+    .productBtn{
+        text-align: end;
+    }
+    .productBtn a{
+        margin-top: 20px;
+        padding-left: 20px;
+        padding-right: 20px;
+        margin-left: 20px;
+        font-size: 18px;
+    }
+    .btn-cart{
+        background-color: #94ba8c;
+        color: white;
+    }
+    .btn-myprod{
+        background-color: #aec892;
+        color: white;
+    }
+    .btn-myprod-cancel{
+        background-color: #ffc3c3;
+        color: white;
+    }
+    .btn-buy{
+        background-color: #f7d794;
+        color: white;
+    }
+    .btn-back{
+        background-color: #c6c9cc;
+        color: white;
+    }
+    .hashtag{
+        background-color: #a1bbf7;
+        color: white;
+        padding: 5px;
+        margin-right: 5px;
+        margin-bottom: 10px;
+    }
+    .udsection{
+        margin-top: 20px;
+    }
+    .udsection button{
+        margin-left: 10px
+    }
+
+</style>
+<div class="container text-center">
+    <div class="text-end">
+        {% for i in p.hashtags.all %}
+            <span class="badge hashtag"># {{ i.name }}</span>
+        {% endfor %}
+    </div>
+    <div class="row">
+        <div class="col-8" style="margin: auto;">
+            <table class="info-table">
+                <tbody>
+                    <tr>
+                        <td>상품명</td>
+                        <td>{{ p.title }}</td>
+                    </tr>
+                    <tr>
+                        <td>판매자</td>
+                        <td>
+                            <img src="{{ p.seller.getpic }}" class="profile-icon">
+                            <div class="cusdropdown">
+                                <span>{{ p.seller.username }}</span>
+                                <div class="cusdropdown-content">
+                                    <a href="{% url 'accounts:seller' p.seller.username %}">프로필보기</a>
+                                    {% if user != p.seller %}
+                                        {% if p.seller in user.following.all %}
+                                            <a href="{% url 'accounts:follow' p.seller.username %}">팔로우취소</a>
+                                        {% else %}
+                                            <a href="{% url 'accounts:follow' p.seller.username %}">팔로우하기</a>
+                                        {% endif %}
+                                    {% endif %}
+                                    <a href="{% url 'products:index' %}?cate=seller&keyword={{p.seller.username}}&stockOut=false">등록한 제품보기</a>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>가격</td>
+                        <td>
+                            {% if p.sale_price %}
+                                <sup><span class="original-price">{{ p.price|intcomma }} Points</span></sup>
+                                <span class="sale_price">{{ p.sale_price|intcomma }} Points</span>
+                            {% else %}
+                                {{ p.price|intcomma }} Points
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>재고</td>
+                        <td>{{ p.stock }}</td>
+                    </tr>
+                    <tr>
+                        <td>제품설명</td>
+                        <td>{{ p.description }}</td>
+                    </tr>
+                </tbody>
+            </table>    
+        </div>
+
+        <div class="col-4" style="margin: auto;">
+            <img src="{{ p.getpic }}" class="product-pic" alt="...">
+        </div>
+    </div>
+
+
+    <div class="info-div text-end">
+        <div class="product-score">
+            <div>
+                <span class="rating">
+                    {% for i in "12345" %}
+                        {% if i|add:"0" <= p.score %}
+                            <span class="full">&#9733;</span>
+                        {% elif p.score|sub:i|add:"0" < 0.5 %}
+                            <span class="full">&#9734;</span>
+                        {% else %}
+                            <span class="half">&#9734;</span>
+                        {% endif %}
+                    {% endfor %}
+                </span>
+                <span class="score-span">구매 만족도 <b>{{ p.score }}</b></span>
+            </div>
+        </div>
+        <div class="product-info">
+            <span>{{ p.created_at|date:'Y년 m월 d일' }}</span>
+        </div>
+
+        <div class="like-div">
+            <span><a href="{% url 'products:likey' p.id %}"><button class="likey-button">{% if user in p.likey.all %}❤️{% else %}♡{% endif %}</button></a> {{ p.likey.count }}</span>
+            <span> 👀 {{ p.hits }}</span>
+        </div>
+    </div>
+
+    {% if user == p.seller %}
+        <div class="text-end udsection">
+            <a href="{% url 'products:update' p.id %}" class="btn btn-moong">게시글 수정</a>
+            <button type="button" onclick="checkRemove()" class="btn btn-moong">게시글 삭제</button>
+        </div>
+    {% endif %}
+
+
+    <input type="hidden" name="product_id" value="{{ p.id }}">
+    <div class="productBtn">
+        {% if user in p.wishuser.all %}
+            <a href="{% url 'products:mine' p.id %}" class="btn btn-myprod-cancel">찜취소</a>
+        {% else %}
+            <a href="{% url 'products:mine' p.id %}" class="btn btn-myprod">찜하기</a>
+        {% endif %}
+        {% if p.seller != user %}
+            <a href="{% url 'products:buy' %}?product_id={{ p.id }}" class="btn btn-buy">구매하기</a>
+        {% endif %}
+        <a class="btn btn-back" onclick="goBackPage()">뒤로가기</a>
+    </div>
+    
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+<script>
+    // 시간을 ISO 8601 형식으로 변환하여 반환
+    function parseDate(dateString) {
+        const date = moment(dateString, "MMMM D, YYYY, h:mm a");
+        return date.toISOString();
+    }
+
+    function timeSince(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        let interval = Math.floor(seconds / 31536000);
+
+        if (interval >= 1) {
+            return interval + " 년 전";
+        }
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) {
+            return interval + " 개월 전";
+        }
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) {
+            return interval + " 일 전";
+        }
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) {
+            return interval + " 시간 전";
+        }
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) {
+            return interval + " 분 전";
+        }
+        return Math.floor(seconds) + " 초 전";
+    }
+
+    const createTimeElements = document.querySelectorAll('.createTime');
+    createTimeElements.forEach(function (element) {
+        const createdTime = element.getAttribute('data-created-at');
+        const isoDateString = parseDate(createdTime);
+        element.textContent = timeSince(isoDateString);
+    });
+
+    function goBackPage(){
+        window.history.back();
+    }
+
+    function checkRemove(){
+        const formData = new FormData();
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        formData.append('product_id', '{{ p.id }}');
+
+        if(confirm("정말 삭제하시겠습니까?")){
+            fetch("{% url 'products:delete' %}", {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                if(data.result == true){
+                    location.href = "{% url 'products:index' %}?stockOut=false";
+                }
+            });
+        };
+    }
+</script>
+
+{% endblock %}

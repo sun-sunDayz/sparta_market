@@ -1,0 +1,285 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load mathfilters %}
+{% load static %}
+{% block content %}
+<style>
+    .container {
+        margin-top: 50px;
+        width: 80%;
+    }
+
+    .card {
+        background-color: transparent;
+        border: none;
+    }
+
+    .card-img-top {
+        width: 100%;
+        height: 200px;
+        object-fit: contain;
+        /* border: 10px solid #c6c9cc; */
+    }
+
+    .badge-red {
+        background-color: red;
+        color: white;
+    }
+
+    .badge-orange {
+        background-color: orange;
+        color: white;
+    }
+
+    .badge-green {
+        background-color: green;
+        color: white;
+    }
+
+    .original-price {
+        text-decoration: line-through;
+    }
+
+    .sale_price {
+        margin-left: 10px;
+        color: red;
+    }
+    
+    .nav-pagination{
+        margin-top: 40px;
+    }
+
+    .search-button *{
+        width: 40%;
+        margin-left: 10px;
+    }
+    
+    .product-info{
+        margin-top: 10px;
+        font-size: 12px;
+    }
+
+    .product-score{
+        font-size: 15px;
+        font-weight: bold;
+    }
+    .product-score span{
+        margin-left: 20px
+    }
+    a{
+        text-decoration: none;
+        color: black;
+    }
+    img:hover{
+        opacity: 0.5;
+    }
+    a:hover{
+        color: rgb(144, 144, 255);
+    }
+    .stockOut{
+        display: none;
+    }
+    .saleProduct{
+        display: none;
+    }
+    .additionalOption{
+        margin-top: 10px;
+    }
+    .additionalOption label{
+        margin-left: 20px;
+        font-size: 12px;
+    }
+
+    .pagination-custom {
+        position: relative;
+        }
+
+    .page-number-custom {
+        position: absolute;
+        top: 7px; /* 숫자의 위치 조정을 위해 적절한 값으로 조정하세요 */
+        left: 10px; /* 숫자의 위치 조정을 위해 적절한 값으로 조정하세요 */;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 11px;
+        font-weight: bold;
+        text-align: center;
+        width: 40px;
+    }
+    .paging-img{
+        width: 60px;
+        object-fit: contain;
+    }
+    .active-page{
+        text-shadow: 0 0 15px #2b00ff;
+    }
+    .paging-arrow{
+        width: 20px;
+        object-fit: contain;
+        margin-right: 10px;
+        margin-left: 10px;
+    }
+    .searchResult{
+        margin-top:10px;
+        font-size: 20px;
+        color: rgb(0, 0, 0);
+    }
+</style>
+<div class="container text-center">
+    
+    <div class="text-end mb-2">
+        <a href="{% url 'products:create' %}" class="btn btn-moong">상품등록</a>
+    </div>
+    
+    <form>
+        <div class="row">
+            <div class="col-2">
+                <select class="form-select" name="cate" aria-label="Default select example">
+                    <option value="title" {% if cate == 'title' %}selected{% endif %}>상품명</option>
+                    <option value="seller" {% if cate == 'seller' %}selected{% endif %}>판매자</option>
+                    <option value="hashtag" {% if cate == 'hashtag' %}selected{% endif %}>해시태그</option>
+                </select>
+            </div>
+            <div class="col-5">
+                <input type="text" class="form-control" name="keyword" value="{{ keyword }}" placeholder="검색어를 입력하세요">
+            </div>
+            <div class="col-3 search-button">
+                <button class="btn btn-secondary">검색</button>
+                <a class="btn btn-secondary" href="{% url 'products:index' %}?stockOut=false">초기화</a>
+            </div>
+            <div class="col-2">
+                <select name="sort" class="form-select" onchange="productSort()">
+                    <option value="new" {% if sort == 'new' %}selected{% endif %}>최신순</option>
+                    <option value="hits" {% if sort == 'hits' %}selected{% endif %}>조회순</option>
+                    <option value="likey" {% if sort == 'likey' %}selected{% endif %}>인기순</option>
+                    <option value="cheap" {% if sort == 'cheap' %}selected{% endif %}>낮은가격순</option>
+                    <option value="expensive" {% if sort == 'expensive' %}selected{% endif %}>높은가격순</option>
+                    <option value="score" {% if sort == 'score' %}selected{% endif %}>평점순</option>
+                </select>
+            </div>
+        </div>
+        <div class="text-end additionalOption">
+            <div class="btn-group" role="group" aria-label="Basic checkbox toggle button group">
+                <input type="checkbox" class="btn-check" {% if stockOut == 'true' %}checked{% endif %} id="stockOut" autocomplete="off" onchange="addOption()">
+                <label class="btn btn-outline-moong" for="stockOut">품절상품포함</label>
+                
+                <input type="checkbox" class="btn-check" {% if saleProd == 'true' %}checked{% endif %} id="saleProd" autocomplete="off" onchange="addOption()">
+                <label class="btn btn-outline-moong" for="saleProd">할인상품만</label>
+            </div>
+        </div>
+    </form> 
+
+    <div class="searchResult text-start">
+        <span class="mt-3">검색결과 {{ exposedPost }} / {{ obj.paginator.count }} 개</span>
+    </div>
+
+    <div class="row mt-3">
+        {% for p in obj %}
+        <div class="col-3">
+            <div class="card">
+                <a href="{% url 'products:detail' p.id %}"><img src="{{ p.getpic }}" class="card-img-top" alt="..."></a>
+                <div class="card-body">
+                    <h5 class="card-title"><a href="{% url 'products:detail' p.id %}">{{ p.title }}</a> <sup><span
+                                class="badge {% if '품절' == p.getstock %}badge-red{% elif '품절' in p.getstock %}badge-orange{% else %}badge-green{% endif %}">{{ p.getstock }}</span></sup></h5>
+                    <p class="card-text">{% if p.sale_price %}<sup class="original-price">{{ p.price|intcomma }}</sup><span class="sale_price">{{ p.sale_price|intcomma }}</span>{% else %}{{ p.price|intcomma }}{% endif %} points</p>
+                    <div class="product-info text-end">
+                        <div class="card-text">판매자 <b>{{ p.seller }}</b></div>
+                        <div class="card-text createTime" data-created-at="{{p.created_at}}"></div>
+                        <div class="card-text product-score"><span>❤️ {{ p.likey.count }}</span> <span>👀 {{ p.hits }}</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if obj.paginator.num_pages > 1 %}
+        <nav aria-label="Page navigation example" class="nav-pagination">
+            <ul class="pagination justify-content-center">
+                {% if obj.has_previous %}
+                    <a href="{% url 'products:index' %}?cate={{cate}}&keyword={{keyword}}&stockOut={{stockOut}}&saleProd={{saleProd}}&sort={{sort}}&page=1">
+                        <img src="{% static 'images/left-double.png' %}" class="paging-arrow" alt="Your Image">
+                    </a>
+                    <a href="{% url 'products:index' %}?cate={{cate}}&keyword={{keyword}}&stockOut={{stockOut}}&saleProd={{saleProd}}&sort={{sort}}&page={{ obj.previous_page_number }}">
+                        <img src="{% static 'images/left.png' %}" class="paging-arrow" alt="Your Image">
+                    </a>
+                {% endif %}
+
+                {% for i in obj.paginator.page_range %}
+                    {% if i >= obj.number|sub:1|intdiv:10|mul:10|add:1 and obj.number|sub:1|intdiv:10|add:1|mul:10 >= i %}
+                        <div class="pagination-custom">
+                            <a href="{% url 'products:index' %}?cate={{cate}}&keyword={{keyword}}&stockOut={{stockOut}}&saleProd={{saleProd}}&sort={{sort}}&page={{i}}"><img {% if obj.number == i %}src="{% static 'images/clo_active.png' %}"{% else %}src="{% static 'images/clo.png' %}"{% endif %} class="paging-img" alt="Your Image"></a>
+                            <a href="{% url 'products:index' %}?cate={{cate}}&keyword={{keyword}}&stockOut={{stockOut}}&saleProd={{saleProd}}&sort={{sort}}&page={{i}}"><div class="page-number-custom {% if obj.number == i %}active-page{% endif %}">{{ i }}</div></a>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+
+
+                {% if obj.has_next %}
+                    <a href="{% url 'products:index' %}?cate={{cate}}&keyword={{keyword}}&stockOut={{stockOut}}&saleProd={{saleProd}}&sort={{sort}}&page={{ obj.next_page_number}}">
+                        <img src="{% static 'images/right.png' %}" class="paging-arrow" alt="Your Image">
+                    </a>
+                    <a href="{% url 'products:index' %}?cate={{cate}}&keyword={{keyword}}&stockOut={{stockOut}}&saleProd={{saleProd}}&sort={{sort}}&page={{ obj.paginator.num_pages }}">
+                        <img src="{% static 'images/right-double.png' %}" class="paging-arrow" alt="Your Image">
+                    </a>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+
+<script>
+    // 시간을 ISO 8601 형식으로 변환하여 반환
+    function parseDate(dateString) {
+        const date = moment(dateString, "MMMM D, YYYY, h:mm a");
+        return date.toISOString();
+    }
+
+    function timeSince(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        let interval = Math.floor(seconds / 31536000);
+
+        if (interval >= 1) {
+            return interval + " 년 전";
+        }
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) {
+            return interval + " 개월 전";
+        }
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) {
+            return interval + " 일 전";
+        }
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) {
+            return interval + " 시간 전";
+        }
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) {
+            return interval + " 분 전";
+        }
+        return Math.floor(seconds) + " 초 전";
+    }
+
+    const createTimeElements = document.querySelectorAll('.createTime');
+    createTimeElements.forEach(function (element) {
+        const createdTime = element.getAttribute('data-created-at');
+        const isoDateString = parseDate(createdTime);
+        element.textContent = timeSince(isoDateString);
+    });
+
+    function productSort(){
+        const sort = document.querySelector('select[name="sort"]').value;
+        location.href = "{% url 'products:index' %}?cate={{cate}}&keyword={{keyword}}&stockOut={{stockOut}}&saleProd={{saleProd}}&sort=" + sort;
+    }
+
+    function addOption(){
+        const stock = document.getElementById('stockOut').checked;
+        const sale = document.getElementById('saleProd').checked;
+        location.href = "{% url 'products:index' %}?cate={{cate}}&keyword={{keyword}}&stockOut=" + stock + "&saleProd=" + sale + "&sort={{sort}}";
+    }
+</script>
+
+{% endblock %}

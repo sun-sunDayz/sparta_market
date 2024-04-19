@@ -1,0 +1,539 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <style>
+        .profile-form{
+            margin-top: 80px;
+        }
+        .userpic{
+            width:50%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .introtext{
+            width: 80%;
+            height: 100px;
+            background-color: transparent;
+            border-top: none;
+            border-radius: 5px;
+            border-left: none;
+            resize: none;
+        }
+        .profile-table{
+            width: 100%;
+            
+        }
+        .profile-table td{
+            font-size: 20px;
+            text-align: left;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .profile-table td:nth-child(1){
+            font-weight: bold;
+            text-shadow: 0px 0px 8px #0033ff5e;
+        }
+        div > button{
+            margin: 10px;
+        }
+        .btn-update{
+            background-color: #b0b1c6;
+            color: white;
+            font-size: 20px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .btn-delete{
+            background-color: #ff4d4da5;
+            color: white;
+            font-size: 20px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .btn-updateok{
+            background-color: #bec7ff;
+            color: white;
+            font-size: 20px;
+            padding-left: 20px;
+            padding-right: 20px;
+        }
+        .changePass{
+            width: 200px;
+            background-color: transparent;
+            border: none;
+            border-bottom: #bec7ff 2px solid;
+            border-radius: 5px;
+        }
+        #passChBtn{
+            border: none;
+            border-radius: 10px;
+            margin-left: 10px; 
+            font-size: 15px;
+        }
+        #commChBtn{
+            border: none;
+            border-radius: 10px;
+            margin-top: 10px; 
+            font-size: 15px;
+        }
+        .changeValueText{
+            background-color: transparent;
+            border: none;
+            resize: none;
+            width: 70%;
+            min-height: 50px;
+        }
+        .tr-btn-section td{
+            text-align: right;
+        }
+        .tr-btn-section button{
+            margin-left: 20px;
+            margin-top: 50px;
+        }
+        #upload-photo {
+            opacity: 0;
+            position: absolute;
+            z-index: -1;
+        }
+        .not-available {
+            color: red;
+            font-size: 12px;
+        }
+        .available {
+            color: green;
+            font-size: 12px;
+        }
+        .follow-icon{
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        .follow-info{
+            margin-top: 20px;
+            margin-bottom: 10px;;
+        }
+        .follow-text{
+            font-size: 20px;
+            font-weight: bold;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #c6c9cc;
+            width: 30%;
+            margin: 0 auto;
+        }
+        .follow-number{
+            font-size: 25px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: rgb(152, 175, 255);
+        }
+        .follow-state{
+            margin-top: 30px;
+        }
+        .followerbox,
+        .followingbox {
+            position: relative; /* 부모 요소에 position: relative; 추가 */
+        }
+
+        .follower-list,
+        .following-list {
+            display: none;
+            position: absolute; /* 절대 위치 지정 */
+            background-color: white;
+            border: 1px solid #ccc;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            padding-left: 30px;
+            padding-right: 30px;
+            z-index: 1;
+            width: 300px;
+            max-width: 300px;
+            max-height: 100px;
+            overflow-y: auto;
+            left: 50%; 
+            transform: translateX(-50%); 
+            top: 100%; 
+        }
+        .follow-tag{
+            margin-bottom:10px;
+        }
+    </style>
+
+    <div class="container text-center">
+        <div class="profile-form row">
+            <div class="col-5" style="margin: auto;">
+                <div id="image-show">
+                    <img src="{{ user.getpic }}" class="userpic">
+                </div>
+                <label for="upload-photo" class="btn btn-update mt-4 btn-sm">프로필 사진 변경</label>
+                <input type="file" id="upload-photo" name="profile_pic" style="border-bottom: none;" onchange="changeFile(this)">
+
+                <div class="row text-center follow-state">
+                    <div class="col-lg-6 followerbox">
+                        <div class="follow-text">팔로워</div>
+                        <div class="follow-number" id="follower-number">{{ user.followers.count }}</div>
+                        <div class="follower-list">
+                            
+                            {% for follower in user.followers.all %}
+                                <div class="follow-tag">
+                                    <a href="{% url 'accounts:seller' follower.username %}">
+                                        <img src="{{ follower.getpic }}" class="follow-icon">
+                                        {{ follower.username }}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                            
+                        </div>
+                    </div>
+                    <div class="col-lg-6 followingbox">
+                        <div class="follow-text">팔로잉</div>
+                        <div class="follow-number">{{ user.following.count }}</div>
+                        <div class="following-list">
+                            
+                            {% for following in user.following.all %}
+                                <div class="follow-tag">
+                                    <a href="{% url 'accounts:seller' following.username %}">
+                                        <img src="{{ following.getpic }}" class="follow-icon">
+                                        {{ following.username }}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            <div class="col-7" style="margin: auto;">
+                <table class="profile-table">
+                    <tr>
+                        <td>아이디</td>
+                        <td>{{ user.username }}</td>
+                    </tr>
+                    <tr>
+                        <td>이메일</td>
+                        <td>{{ user.email }}</td>
+                    </tr>
+                    <tr>
+                        <td>패스워드</td>
+                        <td>
+                            <span class="passwordForm">
+                                <div id="update-pass-state"></div>
+                                <input type="password" class="changePass" disabled>
+                            </span>
+                            <button id="passChBtn" class="btn-sm btn-update" onclick="createPassForm()">수정하기</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>포인트</td>
+                        <td>
+                            {{ user.point }} P
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>회원등급</td>
+                        <td>{{ user.display_grade }}</td>
+                    </tr>
+                    <tr>
+                        <td>가입일</td>
+                        <td>{{ user.date_joined|date:'Y년 m월 d일' }}</td>
+                    </tr>
+                    <tr>
+                        <td>자기소개</td>
+                        <td class="text-start">
+                            <textarea class="changeValueText" disabled>{{ user.introduce }}</textarea>
+                            <button id="commChBtn" class="btn-sm btn-update" onclick="createTextForm()">수정하기</button>
+                        </td>
+                    </tr>
+                    <tr class="tr-btn-section">
+                        <td></td>
+                        <td>
+                            <button type="button" class="margin_right btn btn-update" data-bs-toggle="modal" data-bs-target="#passwordModal"
+                                data-action="update">
+                                정보 수정
+                            </button>
+                            <button type="button" class="btn btn-delete" data-bs-toggle="modal" data-bs-target="#passwordModal"
+                                data-action="delete">
+                                계정 삭제
+                            </button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+    </div>
+
+    <!-- 패스워드 검증 모달 -->
+    <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="passwordModalLabel">패스워드 확인</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 패스워드 입력 폼 -->
+                    <div class="mb-3">
+                        <input type="password" class="form-control" id="passwordInput" placeholder="패스워드를 입력해주세요">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+                    <button type="button" class="btn btn-primary" id="confirmButton">확인</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const passwordState = document.querySelector('#update-pass-state');
+        let userpassBool = false;
+
+        // 패스워드 수정 관련
+        function createPassForm(){
+            const btn = document.querySelector("#passChBtn");
+            const passwordForm = document.querySelector(".passwordForm");
+            const inputForm = document.querySelector(".changePass");
+
+            if(btn.innerHTML == "수정하기"){
+                btn.innerHTML = "수정완료"
+                btn.setAttribute("class", "btn-sm btn-updateok");
+                inputForm.removeAttribute('disabled');
+                inputForm.focus();
+            }else{
+                btn.innerHTML = "수정하기"
+                inputForm.setAttribute('disabled',"true");
+                btn.setAttribute("class", "btn-sm btn-update");          
+            }
+        }
+
+        // 자기소개 수정관련 코드
+        function createTextForm(){
+            const btn = document.querySelector("#commChBtn");
+            const commentArea = document.querySelector('.changeValueText')
+            if(btn.innerHTML == "수정하기"){
+                btn.innerHTML = "수정완료"
+                btn.setAttribute("class", "btn-sm btn-updateok");
+                commentArea.removeAttribute('disabled');
+                commentArea.focus();
+                commentArea.setSelectionRange(commentArea.value.length, commentArea.value.length);
+            }else{
+                btn.innerHTML = "수정하기"
+                btn.setAttribute("class", "btn-sm btn-update");
+                console.log(commentArea);
+                commentArea.setAttribute('disabled', 'true');        
+            }
+        }
+
+
+        // 엔터눌렀을 때 입력완료 상태로 만듦
+        document.addEventListener("keydown", function(event) {
+            const passBtn = document.querySelector("#passChBtn");
+            const commBtn = document.querySelector("#commChBtn");
+
+            if (event.keyCode === 13 && !event.shiftKey && passBtn.innerHTML == "수정완료") {
+                createPassForm();
+            }
+            else if (event.keyCode === 13 && !event.shiftKey && commBtn.innerHTML == "수정완료") {
+                createTextForm();
+            }
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const csrf_token = "{{ csrf_token }}";
+            const passwordModal = document.getElementById('passwordModal');
+            const modalOpen = false;
+            passwordModal.addEventListener('hide.bs.modal', function (event) {
+                const modalOpen = false;
+            });
+            passwordModal.addEventListener('show.bs.modal', function (event) {
+                const modalOpen = true;
+                const button = event.relatedTarget;
+                const action = button.getAttribute('data-action');
+                const form = document.getElementById('passwordForm');
+                const url = '/accounts/' + action + "/";
+
+                // 확인 버튼 클릭 시 동작 설정
+                const confirmButton = document.getElementById('confirmButton');
+                confirmButton.addEventListener('click', handleConfirmation);
+
+                // Enter 키 입력 시 동작 설정
+                passwordModal.addEventListener('keypress', function (e) {
+                    if (modalOpen && e.key === 'Enter') {
+                        handleConfirmation();
+                    }
+                });
+
+                function handleConfirmation() {
+
+                    const passwordInput = document.getElementById('passwordInput').value.trim();
+                    const formData = new FormData();
+                    formData.append('password', passwordInput);
+                    formData.append('csrfmiddlewaretoken', csrf_token);
+
+                    console.log(passwordInput);
+
+                    fetch('/accounts/checkpassword/', {
+                        method: 'POST',
+                        body: formData,
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.result) {
+                                if (action == "update") {
+                                    const form = document.createElement('form');
+                                    form.setAttribute('style', 'display: none;');
+                                    form.setAttribute('method', 'POST');
+                                    form.setAttribute('enctype', 'multipart/form-data');
+                                    form.setAttribute('action', url);
+
+                                    const fileInput = document.querySelector('input[type="file"]');
+                                    const profilePic = fileInput.files[0];
+                                    document.querySelector('.changePass').removeAttribute('disabled');
+                                    const newPassword = document.querySelector('.changePass').value.trim();
+                                    document.querySelector('.changeValueText').removeAttribute('disabled');
+                                    const newComment = document.querySelector('.changeValueText').value.trim();
+                                    
+                                    if (profilePic) {
+                                        const profilePicInput = document.createElement('input');
+                                        profilePicInput.setAttribute('type', 'file');
+                                        profilePicInput.setAttribute('name', 'changePic');
+                                        profilePicInput.files = fileInput.files;
+                                        form.appendChild(profilePicInput);
+                                    }
+                                    
+                                    if(userpassBool){
+                                        const passwordInput = document.createElement('input');
+                                        passwordInput.setAttribute('type', 'text');
+                                        passwordInput.setAttribute('name', 'changePass');
+                                        passwordInput.value = newPassword;
+                                        form.appendChild(passwordInput);
+                                    }
+
+                                    const commentInput = document.createElement('input');
+                                    commentInput.setAttribute('type', 'text');
+                                    commentInput.setAttribute('name', 'changeComment');
+                                    commentInput.value = newComment;
+                                    form.appendChild(commentInput);
+
+                                    const csrfInput = document.createElement('input');
+                                    csrfInput.setAttribute('type', 'hidden');
+                                    csrfInput.setAttribute('name', 'csrfmiddlewaretoken');
+                                    csrfInput.value = csrf_token;
+                                    form.appendChild(csrfInput);
+
+                                    document.body.appendChild(form);
+                                    form.submit();
+                                } else if (action == "delete") {
+                                    const formData2 = new FormData();
+                                    formData2.append('csrfmiddlewaretoken', csrf_token);
+                                    fetch('/accounts/delete/', {
+                                        method: 'POST',
+                                        body: formData2,
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.result) {
+                                            location.href = "/accounts/index/"
+                                        }else{
+                                            alert("계정 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.");
+                                            location.reload();  
+                                        }
+                                    })
+                                    .catch(error => console.error('Error:', error));
+                                }
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                }
+                // 모달이 열릴 때 패스워드 입력란에 포커스 주기
+                setTimeout(function () {
+                    const passwordInput = document.getElementById('passwordInput');
+                    passwordInput.focus();
+                }, 500);
+
+            });
+        });
+        function changeFile(input) {
+            let file = input.files[0]; // 선택한 파일 가져오기
+            let container = document.getElementById('image-show');
+
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+
+            let newImage = document.createElement("img");
+            newImage.setAttribute("class", "userpic")
+
+            newImage.src = URL.createObjectURL(file);
+            container.appendChild(newImage);
+        }
+
+        function validatePassword(password) {
+            if (password.length < 8) {
+                return "패스워드는 최소 8자리 이상이어야 합니다.<br> 입력된 패스워드로 바뀌지 않습니다.";
+            }
+            const hasUpperCase = /[A-Z]/.test(password);
+            const hasLowerCase = /[a-z]/.test(password);
+            const hasDigit = /\d/.test(password);
+            const hasSpecial = /[ `!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~]/.test(password); 
+            if (!(hasUpperCase && hasLowerCase && hasDigit && hasSpecial)) {
+                return "패스워드는 대문자, 소문자, 숫자, 특수 문자를 모두 포함해야 합니다.<br> 입력된 패스워드로 바뀌지 않습니다.";
+            }
+            return "유효한 패스워드입니다.";
+        }
+
+
+        document.querySelector('.changePass').addEventListener('keyup', function () {
+            const password = document.querySelector('.changePass').value.trim();            
+            passwordState.innerHTML = validatePassword(password);
+            passwordState.style.display = "block";
+            if (passwordState.innerHTML === "유효한 패스워드입니다.") {
+                passwordState.setAttribute('class', 'available');
+                userpassBool = true;
+            } else {
+                passwordState.setAttribute('class', 'not-available');
+                userpassBool = false;
+            }
+        });
+
+        document.querySelector('.changePass').addEventListener('focusout', function () {
+            if (userpassBool) {
+                passwordState.style.display = "none";
+            }else{
+                passwordState.style.display = "block";
+            }
+        });
+        document.addEventListener("DOMContentLoaded", function () {
+            const followerbox = document.querySelector('.followerbox');
+            const followerList = document.querySelector('.follower-list');
+            // 목록에서 마우스가 벗어나면 목록 숨기기
+            followerbox.addEventListener('mouseenter', function () {
+                followerList.style.display = 'block';
+            });
+            followerbox.addEventListener('mouseleave', function () {
+                followerList.style.display = 'none';
+            });
+
+            const followingbox = document.querySelector('.followingbox');
+            const followingList = document.querySelector('.following-list');
+
+            followingbox.addEventListener('mouseenter', function () {
+                followingList.style.display = 'block';
+            });
+            followingbox.addEventListener('mouseleave', function () {
+                followingList.style.display = 'none';
+            });
+        });
+        function autoResize() {
+            const textarea = document.querySelector('.changeValueText');
+            textarea.style.height = 'auto'; 
+            textarea.style.height = textarea.scrollHeight + 'px'; 
+        }
+        
+        window.onload = autoResize;
+    </script>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <style>
+        .profile-form{
+            margin-top: 100px;
+        }
+        .userpic{
+            width:40%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        .profile-table{
+            width: 100%;
+        }
+        .profile-table td{
+            font-size: 20px;
+            text-align: left;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .profile-table td:nth-child(1){
+            font-weight: bold;
+            text-shadow: 0px 0px 8px #0033ff5e;
+        }
+        .btn-follow{
+            background-color: #94ba8c;
+            color: white;
+            border: none;
+        }
+        .btn-unfollow{
+            background-color: #ffc3c3;
+            color: white;
+            border: none;
+        }
+        .follow-icon{
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+        }
+        .follow-info{
+            margin-top: 20px;
+            margin-bottom: 10px;;
+        }
+        .follow-text{
+            font-size: 20px;
+            font-weight: bold;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #c6c9cc;
+            width: 30%;
+            margin: 0 auto;
+        }
+        .follow-number{
+            font-size: 25px;
+            font-weight: bold;
+            margin-top: 10px;
+            color: rgb(152, 175, 255);
+        }
+        .follow-state{
+            margin-top: 20px;
+        }
+        .followerbox,
+        .followingbox {
+            position: relative; /* 부모 요소에 position: relative; 추가 */
+        }
+
+        .follower-list,
+        .following-list {
+            display: none;
+            position: absolute; /* 절대 위치 지정 */
+            background-color: white;
+            border: 1px solid #ccc;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            padding-left: 30px;
+            padding-right: 30px;
+            z-index: 1;
+            width: 300px;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            left: 50%; /* 가운데 정렬 */
+            transform: translateX(-50%); /* 가운데 정렬을 위한 transform 사용 */
+            top: 100%; /* 부모 요소의 아래쪽에 배치 */
+        }
+        .follower-list ul {
+            list-style-type: none;
+            padding: 5px;
+        }
+        .follower-list ul li {
+            margin-bottom: 5px;
+        }
+        
+        .following-list ul {
+            list-style-type: none;
+            padding: 5px;
+        }
+        .following-list ul li {
+            margin-bottom: 5px;
+        }
+    </style>
+
+    <div class="container text-center">
+        <div class="profile-form row">
+            <div class="col-5" style="margin: auto;">
+                <div id="image-show">
+                    <img src="{{ userdata.getpic }}" class="userpic">
+                </div>
+                <div class="row text-center follow-state">
+                    <div class="col-lg-6 followerbox">
+                        <div class="follow-text">팔로워</div>
+                        <div class="follow-number" id="follower-number">{{ userdata.followers.count }}</div>
+                        <div class="follower-list">
+                            
+                            {% for follower in userdata.followers.all %} 
+                                <a href="{% url 'accounts:seller' follower.username %}">
+                                    <img src="{{ follower.getpic }}" class="follow-icon">
+                                    {{ follower.username }}
+                                </a>
+                            {% endfor %}
+                            
+                        </div>
+                    </div>
+                    <div class="col-lg-6 followingbox">
+                        <div class="follow-text">팔로잉</div>
+                        <div class="follow-number">{{ userdata.following.count }}</div>
+                        <div class="following-list">
+                            {% for following in userdata.following.all %} 
+                                <a href="{% url 'accounts:seller' following.username %}">
+                                    <img src="{{ following.getpic }}" class="follow-icon">
+                                    {{ following.username }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-7" style="margin: auto;">
+                <table class="profile-table">
+                    <tr>
+                        <td>아이디</td>
+                        <td>{{ userdata.username }}</td>
+                    </tr>
+                    <tr>
+                        <td>이메일</td>
+                        <td>{{ userdata.email }}</td>
+                    </tr>
+                    <tr>
+                        <td>회원등급</td>
+                        <td>{{ userdata.display_grade }}</td>
+                    </tr>
+                    <tr>
+                        <td>가입일</td>
+                        <td>{{ userdata.date_joined|date:'Y년 m월 d일' }}</td>
+                    </tr>
+                    <tr>
+                        <td>자기소개</td>
+                        <td>
+                            {{ userdata.introduce }}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div class="follow-info text-end">
+            {% if userdata.followers.count > 3 %}
+                {% for i in userdata.followers.all|slice:":3" %}
+                    <span class="follow-mem">{{i.username}}</span>
+                {% endfor %}
+                <span> 외 {{userdata.followers.count}} 명의 팔로워가 있습니다.</span>
+            {% elif userdata.followers.count > 0 %}
+                {% for i in userdata.followers.all %}
+                    <span class="follow-mem">{{i.username}}님 </span>
+                {% endfor %}
+                <span> 께서 팔로우 중입니다.</span>
+            {% else %}
+                <span>팔로워가 없습니다.</span>
+            {% endif %}
+        
+        </div>
+        <div class="text-end">
+            {% if userdata != user %}
+                {% if userdata in user.following.all %}
+                    <a href="{% url 'accounts:follow' userdata.username %}" class="btn btn-unfollow">팔로우취소</a>
+                {% else %}
+                    <a href="{% url 'accounts:follow' userdata.username %}" class="btn btn-follow">팔로우하기</a>
+                {% endif %}
+            {% endif %}
+            <a href="{% url 'products:index' %}?cate=seller&keyword={{userdata.username}}&stockOut=false" class="btn btn-moong btn-prod">등록한제품보기</a>
+            <button class="btn btn-moong btn-secondary" onclick="goBackPage()">뒤로가기</button>
+        </div>
+    </div>
+
+    <script>
+        function goBackPage(){
+            window.history.back();
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+            const followerbox = document.querySelector('.followerbox');
+            const followerList = document.querySelector('.follower-list');
+            
+            followerbox.addEventListener('mouseenter', function () {
+                followerList.style.display = 'block';
+            });
+            followerbox.addEventListener('mouseleave', function () {
+                followerList.style.display = 'none';
+            });
+
+            const followingbox = document.querySelector('.followingbox');
+            const followingList = document.querySelector('.following-list');
+
+            followingbox.addEventListener('mouseenter', function () {
+                followingList.style.display = 'block';
+            });
+            followingbox.addEventListener('mouseleave', function () {
+                followingList.style.display = 'none';
+            });
+        });
+    </script>
+{% endblock %}

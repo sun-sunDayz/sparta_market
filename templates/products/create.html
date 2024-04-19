@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <style>
+        .createForm {
+            margin-top: 70px;
+            width: 80%;
+            align-items: center;
+            margin-bottom: 100px;
+        }
+        .page-subject {
+            margin-bottom: 50px;
+        }
+
+        .introtext {
+            height: 200px;
+            resize: none;
+        }
+
+        .first-focus {
+            margin-bottom: 20px;
+        }
+
+        .productPicBtn {
+            margin-top: 20px;
+        }
+        #upload-photo {
+            display: none;
+        }
+        .product-info {
+            align-items: center;    
+            justify-content: center;
+        }
+        .createBtn{
+            padding-left: 25px;
+            padding-right: 25px;
+            margin-top: 70px;
+            margin-right: 40px;
+            font-size: 20px;
+        }
+        .info-table {
+            width: 100%;
+            background-color: transparent;
+            margin-top: 40px;
+        }
+        .info-table td {
+            padding: 10px;
+            font-size: 15px;
+        }
+        .info-table td:nth-child(1) {
+            width: 30%;
+            font-weight: bolder;
+            font-size: 20px;
+            color: white;
+            text-shadow: 0px 0px 4px #0048ff;
+        }
+        
+        .badge {
+            position: sticky;
+            /* top: 50%; */
+            right: 8px;
+            padding: 5px 10px;
+            background-color: #aeb0a9;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .badge-close {
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        .hashtagInput{
+            width: 100%;
+            padding:.375rem .75rem;
+            font-size:1rem;
+            font-weight:400;
+            line-height:1.5;
+            color:var(--bs-body-color);
+            -webkit-appearance:none;
+            -moz-appearance:none;
+            appearance:none;
+            background-color:var(--bs-body-bg);
+            background-clip:padding-box;
+            border:var(--bs-border-width) solid var(--bs-border-color);
+            border-radius:var(--bs-border-radius);
+            transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out
+        }
+        .priceInput{
+            width: 50%;
+            padding:.375rem .75rem;
+            font-size:1rem;
+            font-weight:400;
+            line-height:1.5;
+            color:var(--bs-body-color);
+            -webkit-appearance:none;
+            -moz-appearance:none;
+            appearance:none;
+            background-color:var(--bs-body-bg);
+            background-clip:padding-box;
+            border:var(--bs-border-width) solid var(--bs-border-color);
+            border-radius:var(--bs-border-radius);
+            transition:border-color .15s ease-in-out,box-shadow .15s ease-in-out
+        }
+        .saleBtn {
+            margin-left: 20px;
+            vertical-align: center;
+        }
+
+    </style>
+    <div class="container text-center createForm">
+        <h1 class="page-subject">상품 등록</h1>
+        <form method="post" enctype="multipart/form-data" name="createProductForm">
+            {% csrf_token %}
+            <div class="row">
+                <div class="col-lg-4 mt-4">
+                    <div class="image-view" id="image-preview">
+                        <img src="{% static 'images/noprod.png' %}" style="width:200px; object-fit: cover;">
+                    </div>
+                    <label for="upload-photo" class="btn btn-moong productPicBtn">사진 등록</label>
+                    <input type="file" id="upload-photo" name="productImage" style="border-bottom: none;" onchange="loadFile(this)">
+                </div>
+                <div class="col-lg-8 mt-4">
+                    <input type="text" name="productTitle" class="first-focus form-control" placeholder="상품명을 입력해주세요">
+                    <textarea name="productDesc" class="introtext form-control" placeholder="상품을 소개해보세요"></textarea>
+                </div>
+            </div>
+
+            <div class="product-info">
+                <table class="info-table">
+                    <tr>
+                        <td>상품가격</td>
+                        <td class="text-start">
+                            <input type="number" step="10" name="productPrice" class="priceInput" placeholder="원가를 입력해주세요">
+                            <button type="button" class="btn btn-moong btn-sm saleBtn" onclick="saleTrShow()">할인가입력</button>
+                        </td>
+                    </tr> 
+                    <tr class="saleTr" style="display: none;">
+                        <td>할인가격</td>
+                        <td class="text-start">
+                            <input type="number" disabled="true" step="10" name="productSalePrice" class="priceInput" placeholder="할인가를 입력해주세요">
+                        </td>
+                    </tr> 
+                    <tr>
+                        <td>상품재고</td>
+                        <td><input type="number" name="productStock" class="form-control" placeholder="재고를 입력해주세요"></td>
+                    </tr>
+                    <tr>
+                        <td>해시태그 등록</td>
+                        <td>
+                            <input class="hashtagInput" id="textInput" type="text" placeholder="해시태그 입력">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td class="text-start badge-container"></td>
+                    </tr>
+                </table>
+            </div>
+            
+            <button type="button" onclick="checkCreateForm()" class="btn btn-moong createBtn">제품등록</button>
+            <a href="{% url 'products:index' %}" class="btn btn-moong createBtn">뒤로가기</a>
+        </form> 
+    </div>
+
+    <script>
+        const textInput = document.getElementById('textInput');
+        const badgeContainer = document.querySelector('.badge-container');
+        const saleBtn = document.querySelector('.saleBtn');
+        const productSalePrice = document.querySelector('input[name="productSalePrice"]')
+
+
+        textInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                const text = textInput.value.trim();
+                if (text.length > 1 && text.startsWith('#') && !isBadgeExist(text)) {
+                    createBadge(text);
+                }
+                textInput.value = ''; 
+            }
+        });
+
+        function isBadgeExist(text) {
+            const badges = badgeContainer.querySelectorAll('.badge');
+            for (const badge of badges) {
+                if (badge.textContent.slice(0, -1) === text) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function createBadge(text) {
+            const badge = document.createElement('span');
+            badge.classList.add('badge');
+            badge.textContent = text;
+
+            const badgeInput = document.createElement('input');
+            badgeInput.type = 'hidden';
+            badgeInput.name = 'productHashtag';
+            badgeInput.value = text;
+            badge.appendChild(badgeInput);
+
+            const closeButton = document.createElement('span');
+            closeButton.textContent = 'x';
+            closeButton.classList.add('badge-close');
+            closeButton.addEventListener('click', function() {
+                badge.remove();
+            });
+
+            badge.appendChild(closeButton);
+            badgeContainer.appendChild(badge); // 배지를 badgeContainer에 추가
+        }
+
+        function checkCreateForm() {
+            const cpf = document.createProductForm;
+            if (cpf.productTitle.value == "") {
+                alert("상품명을 입력해주세요.");
+                cpf.productTitle.focus();
+                return;
+            } else if (cpf.productPrice.value == "") {
+                alert("상품가격을 입력해주세요.");
+                cpf.productPrice.focus();
+                return;
+            } else if (cpf.productStock.value == "") {
+                alert("상품재고를 입력해주세요.");
+                cpf.productStock.focus();
+                return;
+            } else {
+                cpf.submit();
+            }
+        }
+        
+        function saleTrShow() {
+            const saleTr = document.querySelector('.saleTr');
+            
+            if (saleBtn.textContent == '할인가입력') {
+                saleTr.style.display = '';
+                saleBtn.textContent = '입력취소';
+                productSalePrice.removeAttribute('disabled')
+            } else {
+                saleTr.style.display = 'none';
+                saleBtn.textContent = '할인가입력';
+                productSalePrice.setAttribute('disabled', true)
+            }
+        }
+    </script>
+{% endblock %}

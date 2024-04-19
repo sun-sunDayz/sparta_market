@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load mathfilters %}
+{% load static %}
+{% block content %} 
+<style>
+    .product-pic{
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+    }
+    .protitle{
+        font-size: 20px;
+        color: black;
+    }
+
+</style>
+
+<div class="container customcon">
+    <div class="page-subject text-center">구매 내역</div>
+    <table class="customtable text-center">
+        <thead>
+            <tr>
+                <th scope="col">순번</th>
+                <th scope="col">상품이미지</th>
+                <th scope="col">상품명</th>
+                <th scope="col">구매가격</th>
+                <th scope="col">구매수량</th>
+                <th scope="col">총가격</th>
+                <th scope="col">구매날짜</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><img src="{{ p.product.getpic }}" class="product-pic"></td>
+                <td>
+                    {{ p.product.title }}
+                </td>
+                <td>
+                    {{ p.priced|intcomma }}
+                </td>
+                <td>
+                    {{ p.quantity }}
+                </td>
+                <td>
+                    {{ p.priced|mul:p.quantity|intcomma }} Points</div>
+                </td>
+                <td>
+                    {{ p.created_at|date:"Y년 m월 d일 H시 i분" }}
+                </td>
+            </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7">구매하신 상품이 없습니다.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<script>
+    const totalPriceDiv = document.querySelector('.total-price');
+    function calcTotalPrice(e){
+        const originalPrice = parseInt(e.parentElement.previousElementSibling.querySelector('.original-price').innerText.replace(/[^0-9]/g, ''));
+        const salePriceElement = e.parentElement.previousElementSibling.querySelector('.sale-price');
+        console.log(salePriceElement);
+        const salePrice = salePriceElement ? parseInt(salePriceElement.innerText.replace(/[^0-9]/g, '')) : null;
+        
+        const pricePerItem = salePrice !== null ? salePrice : originalPrice;
+        console.log(pricePerItem );
+        const selectedQuantity = parseInt(e.value);
+        const totalPrice = selectedQuantity * pricePerItem;
+        const formattedTotalPrice = totalPrice.toLocaleString();
+
+        e.parentElement.nextElementSibling.querySelector('.total-partial-price').innerText = formattedTotalPrice + " Points";
+        calcTotalPriceAll();
+    }
+
+    function calcTotalPriceAll(){
+        const totalPartialPrices = document.querySelectorAll('.total-partial-price');
+        let totalPrice = 0;
+        totalPartialPrices.forEach(partialPrice => {
+            const price = parseInt(partialPrice.innerText.replace(/[^0-9]/g, ''));
+            totalPrice += price;
+        });
+        totalPriceDiv.innerText = `${totalPrice.toLocaleString()} Points`;
+    }
+    calcTotalPriceAll();
+
+    function removeBuyList(e){
+        e.parentElement.parentElement.remove();
+        calcTotalPriceAll();
+    }
+
+    function checkBuyPossible(){
+        const total = parseInt(totalPriceDiv.innerText.replace(/[^0-9]/g, ''));
+        if(total === 0){
+            alert('구매할 상품이 없습니다.');
+            return;
+        }
+        if(total > '{{ user.point }}'){
+            alert('포인트가 부족합니다. 현재 보유 포인트: {{ user.point }} Points');
+            return;
+        }else{
+            document.buyForm.submit();
+        }
+    }
+</script>
+{% endblock %}

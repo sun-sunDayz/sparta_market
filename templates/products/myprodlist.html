@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% block content %} 
+<style>
+    .product-pic{
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+    }
+
+    .protitle{
+        font-size: 20px;
+        color: black;
+    }
+    .protitle:hover{
+        color: blue;
+        font-weight: bold;
+    }
+    img:hover{
+        opacity: 0.5;
+    }
+    .btn-myprod-cancel{
+        background-color: transparent;
+        border:none;
+    }
+    .original-price {
+        text-decoration: line-through;
+    }
+
+    .sale_price {
+        margin-left: 10px;
+        color: red;
+    }
+    .avail{
+        color: green;
+        font-weight: bold;
+    }
+    .not-avail{
+        color: red;
+        font-weight: bold;
+    }
+    .ud-icon{
+        width: 20px;
+        height: 20px;
+    }
+</style>
+<div class="container customcon">
+    <div class="page-subject text-center">상품관리</div>
+    <table class="customtable text-center">
+        <thead>
+            <tr>
+                <th scope="col">순번</th>
+                <th scope="col">상품이미지</th>
+                <th scope="col">상품명</th>
+                <th scope="col">조회수</th>
+                <th scope="col">좋아요</th>
+                <th scope="col">수정</th>
+                <th scope="col">삭제</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in products %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td><a href="{% url 'products:detail' p.id %}"><img src="{{ p.getpic }}" class="product-pic"></a></td>
+                <td><a href="{% url 'products:detail' p.id %}" class="protitle">{{ p.title }}</a></td>
+                <td>{{ p.hits }}</td>
+                <td>{{ p.likey.count }}</td>
+                <td>
+                    <a href="{% url 'products:update' p.id %}"><img src="{% static 'images/write.png' %}" class="ud-icon"></a>
+                </td>
+                <td>
+                    <a onclick="checkRemove(this)" class="product_id" pid="{{ p.id }}"><img src="{% static 'images/delete.png' %}" class="ud-icon"></a>
+                </td>
+            </tr>
+            
+            {% empty %}
+                <tr>
+                    <td colspan="7">등록하신 상품이 없습니다.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<script>
+    function checkRemove(e){
+        const formData = new FormData();
+        const pid = e.getAttribute('pid');
+        formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+        formData.append('product_id', pid);
+
+        if(confirm("정말 삭제하시겠습니까?")){
+            fetch("{% url 'products:delete' %}", {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+            .then(data => {
+                if(data.result == true){
+                    window.location.reload();
+                }
+            });
+        };
+    }
+</script>
+{% endblock %}
