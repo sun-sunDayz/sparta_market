@@ -82,12 +82,18 @@
     .saleProduct{
         display: none;
     }
+
     .additionalOption{
         margin-top: 10px;
     }
     .additionalOption label{
         margin-left: 20px;
         font-size: 12px;
+    }
+    .rating{
+        color: rgb(113, 97, 237);
+        margin-bottom:5px;
+        text-shadow: 0px 0px 6px skyblue;
     }
 
     .pagination-custom {
@@ -166,6 +172,9 @@
                 <label class="btn btn-outline-moong" for="saleProd">할인상품만</label>
             </div>
         </div>
+        <div class="text-end mt-2">
+            현재 보유 포인트 <b>{{ user.point|intcomma }} Points</b>
+        </div>
     </form> 
 
     <div class="searchResult text-start">
@@ -182,6 +191,18 @@
                                 class="badge {% if '품절' == p.getstock %}badge-red{% elif '품절' in p.getstock %}badge-orange{% else %}badge-green{% endif %}">{{ p.getstock }}</span></sup></h5>
                     <p class="card-text">{% if p.sale_price %}<sup class="original-price">{{ p.price|intcomma }}</sup><span class="sale_price">{{ p.sale_price|intcomma }}</span>{% else %}{{ p.price|intcomma }}{% endif %} points</p>
                     <div class="product-info text-end">
+                        <div class="rating">
+                            {{ p.score }}
+                            {% for i in "12345" %}
+                                {% if i|add:"0" <= p.score %}
+                                    <span class="full">&#9733;</span>
+                                {% elif p.score|sub:i|add:"0" < 0.5 %}
+                                    <span class="full">&#9734;</span>
+                                {% else %}
+                                    <span class="half">&#9734;</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
                         <div class="card-text">판매자 <b>{{ p.seller }}</b></div>
                         <div class="card-text createTime" data-created-at="{{p.created_at}}"></div>
                         <div class="card-text product-score"><span>❤️ {{ p.likey.count }}</span> <span>👀 {{ p.hits }}</span></div>

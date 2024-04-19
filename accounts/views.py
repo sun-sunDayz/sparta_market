@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth import authenticate
@@ -9,7 +9,9 @@ from django.utils.safestring import mark_safe
 from .models import User
 from django.contrib import messages
 from django.utils import timezone
-import json
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
+
 
 # Create your views here.
 def index(request):
@@ -27,7 +29,7 @@ def login(request):
                     user.save()
                     PointHistory.objects.create(user=user, change_amount=1000, reason="로그인 보너스")
 
-                    message = mark_safe(f"{user.username} 님! \n오늘도 오셨군요! 추가로 <b class='add-point'>1000 point</b> 가 지급되었습니다!")
+                    message = mark_safe(f"{user.username} 님! <br>오늘도 오셨군요! 추가로 <b class='add-point'>1000 point</b> 가 지급되었습니다!")
                     messages.success(request,message)
                 else:
                     messages.success(request, f"{user.username} 님! 환영합니다!")
@@ -35,9 +37,14 @@ def login(request):
                 user.point += 1000
                 user.save()
                 PointHistory.objects.create(user=user, change_amount=1000, reason="로그인 보너스")
-                message = mark_safe(f"{user.username} 님! 환영합니다! \n저희 사이트는 하루에 한 번 로그인을 하면 <b class='add-point'>10 point</b> 가 지급되요!")
+                message = mark_safe(f"{user.username} 님! 환영합니다! <br>저희 사이트는 하루에 한 번 로그인을 하면 <b class='add-point'>1000 point</b> 가 지급되요!")
                 messages.success(request, message)
             auth_login(request, user)
+
+            next_url = request.GET.get("next")
+            if next_url:
+                return redirect(next_url)
+
             return redirect("accounts:index")
         else:
             messages.error(request, "회원정보가 일치하지 않습니다. 다시 시도해주세요.") 
@@ -48,6 +55,7 @@ def logout(request):
     messages.success(request, "로그아웃 되었습니다. 다음에 또 뵙겠습니다!")
     return redirect("accounts:index")
 
+
 def signup(request):
     if request.method == "POST":
         username = request.POST.get("username")
@@ -57,7 +65,7 @@ def signup(request):
         introduce = request.POST.get("introduce")
         if checkSignup(request, username, userpass, email):
             User.objects.create_user(username=username, password=userpass, email=email, profile_pic=profile_pic, introduce=introduce)
-            message = mark_safe(f"{username} 님! \n 회원가입을 축하드립니다! \n 회원가입을 축하하며 <b class='add-point'>10000 Point</b> 를 지급해드립니다! \n로그인해주세요!")
+            message = mark_safe(f"{username} 님! 회원가입을 축하드립니다! <br>회원가입을 축하하며 <b class='add-point'>10000 Point</b> 를 지급해드립니다! <br>로그인해주세요!")
             PointHistory.objects.create(user=User.objects.get(username=username), change_amount=10000, reason="회원가입 보너스")
             messages.success(request, message)
             return redirect("accounts:login")
@@ -86,16 +94,19 @@ def checkSignup(request, username, userpass, email):
         return False
     return True
 
+@login_required
 def profile(request):
     return render(request, "accounts/profile.html")       
 
+@login_required
 def seller(request, name):
-    user = User.objects.get(username=name)
+    user = get_object_or_404(User, username=name)
     context = {
         "userdata" : user,
     }
     return render(request, "products/seller.html", context)
 
+@login_required
 def update(request):
     if request.method == "POST":
         user = request.user
@@ -115,6 +126,7 @@ def update(request):
         messages.success(request, "변경사항이 저장되었습니다.")
     return render(request, "accounts/profile.html")
 
+@require_POST
 def delete(request):
     if request.method == "POST":
         request.user.profile_pic.delete()
@@ -139,9 +151,10 @@ def checkpassword(request):
     result = check_password(password, request.user.password)
     return JsonResponse({"result": result})
 
+@login_required
 def follow(request, name):
     user = request.user
-    target = User.objects.get(username=name)
+    target = get_object_or_404(User, username=name)
     if user != target:
         if target in user.following.all():
             user.following.remove(target)

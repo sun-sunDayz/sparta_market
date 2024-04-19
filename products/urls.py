@@ -15,4 +15,5 @@ urlpatterns = [
     path("buy/", views.buy, name="buy"),
     path("buylist/", views.buylist, name="buylist"),
     path("pointlist/", views.pointlist, name="pointlist"),
+    path("rating/", views.rating, name="rating"),
 ]

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load humanize %}
 {% load mathfilters %}
+{% load custom_tags %}
 {% load static %}
 {% block content %} 
 <style>
@@ -13,7 +14,20 @@
         font-size: 20px;
         color: black;
     }
-
+    
+    .rating{
+        font-size: 17px;
+        display: block;
+        border: none;
+        margin-bottom: 10px;
+        background-color: transparent;
+        color:blue;
+    }
+    .completed-rating{
+        font-size: 17px;
+        color: green;
+        font-weight: bold;
+    }
 </style>
 
 <div class="container customcon">
@@ -26,8 +40,9 @@
                 <th scope="col">상품명</th>
                 <th scope="col">구매가격</th>
                 <th scope="col">구매수량</th>
-                <th scope="col">총가격</th>
+                <th scope="col">총구매가격</th>
                 <th scope="col">구매날짜</th>
+                <th scope="col">제품평가</th>
             </tr>
         </thead>
         <tbody>
@@ -50,63 +65,36 @@
                 <td>
                     {{ p.created_at|date:"Y년 m월 d일 H시 i분" }}
                 </td>
+                <td>
+                    {% if user.ratings.all|filter_by_product_id:p.product.id %}
+                        <span class="completed-rating">평가완료</span>
+                    {% else %}
+                        <form action="{% url 'products:rating' %}" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_id" value="{{ p.product.id }}">
+                            <select name="rating" id="rating" class="rating">
+                                <option value="5">★★★★★</option>
+                                <option value="4">★★★★☆</option>
+                                <option value="3">★★★☆☆</option>
+                                <option value="2">★★☆☆☆</option>
+                                <option value="1">★☆☆☆☆</option>
+                                <option value="0">☆☆☆☆☆</option>
+                            </select>
+                            <button class="btn btn-outline-secondary btn-sm">평가하기</button>
+                        </form>
+                    {% endif %}
+                </td>
             </tr>
             {% empty %}
                 <tr>
-                    <td colspan="7">구매하신 상품이 없습니다.</td>
+                    <td colspan="8">구매하신 상품이 없습니다.</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 
-
 <script>
-    const totalPriceDiv = document.querySelector('.total-price');
-    function calcTotalPrice(e){
-        const originalPrice = parseInt(e.parentElement.previousElementSibling.querySelector('.original-price').innerText.replace(/[^0-9]/g, ''));
-        const salePriceElement = e.parentElement.previousElementSibling.querySelector('.sale-price');
-        console.log(salePriceElement);
-        const salePrice = salePriceElement ? parseInt(salePriceElement.innerText.replace(/[^0-9]/g, '')) : null;
-        
-        const pricePerItem = salePrice !== null ? salePrice : originalPrice;
-        console.log(pricePerItem );
-        const selectedQuantity = parseInt(e.value);
-        const totalPrice = selectedQuantity * pricePerItem;
-        const formattedTotalPrice = totalPrice.toLocaleString();
-
-        e.parentElement.nextElementSibling.querySelector('.total-partial-price').innerText = formattedTotalPrice + " Points";
-        calcTotalPriceAll();
-    }
-
-    function calcTotalPriceAll(){
-        const totalPartialPrices = document.querySelectorAll('.total-partial-price');
-        let totalPrice = 0;
-        totalPartialPrices.forEach(partialPrice => {
-            const price = parseInt(partialPrice.innerText.replace(/[^0-9]/g, ''));
-            totalPrice += price;
-        });
-        totalPriceDiv.innerText = `${totalPrice.toLocaleString()} Points`;
-    }
-    calcTotalPriceAll();
-
-    function removeBuyList(e){
-        e.parentElement.parentElement.remove();
-        calcTotalPriceAll();
-    }
-
-    function checkBuyPossible(){
-        const total = parseInt(totalPriceDiv.innerText.replace(/[^0-9]/g, ''));
-        if(total === 0){
-            alert('구매할 상품이 없습니다.');
-            return;
-        }
-        if(total > '{{ user.point }}'){
-            alert('포인트가 부족합니다. 현재 보유 포인트: {{ user.point }} Points');
-            return;
-        }else{
-            document.buyForm.submit();
-        }
-    }
+// JavaScript 코
 </script>
 {% endblock %}

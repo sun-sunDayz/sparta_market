@@ -17,10 +17,9 @@ class Products(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     hits = models.IntegerField(default=0)
     likey = models.ManyToManyField(User, related_name="likey", blank=True)
-    score = models.FloatField(default=0)
     display_price = models.IntegerField(default=0)
     wishuser = models.ManyToManyField(User, related_name="wishprod", blank=True)
-
+    score = models.FloatField(default=0)
 
     def __str__(self):
         return f"{self.title} - {self.seller.username}"
@@ -41,6 +40,7 @@ class Products(models.Model):
         if self.stock > 0:
             return True
         return False
+    
     
     class Meta:
         pass
@@ -89,4 +89,14 @@ class PointHistory(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.change_amount} - {self.reason}"
 
-        
+
+class ProductRating(models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="ratings")
+    product = models.ForeignKey(Products, on_delete=models.CASCADE, related_name="ratings")
+    rating = models.FloatField()
+
+    class Meta:
+        unique_together = ('user', 'product',) 
+
+    def __str__(self):
+        return f"{self.user.username} - {self.product.title}: {self.rating}"

@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
 {% load humanize %}
 {% load static %}
+{% load custom_tags %}
 {% load mathfilters %}
 {% block content %}
 <style>
@@ -57,19 +58,20 @@
         background-color: transparent;
         text-align: left;
         padding: 20px;
+        width: 100%;
     }
     .product-pic{
         width: 100%;
     }
     .info-div{
-        margin-top: 20px;
+        margin-top: 10px;
     }
     .rating{
-        color: gold;
+        color: rgb(113, 97, 237);
         text-shadow: 0px 0px 6px skyblue;
     }
     .score-span{
-        margin-left: 20px;
+        margin-left: 10px;
         font-size: 14px;
     }
     .likey-button{
@@ -134,10 +136,6 @@
         background-color: #f7d794;
         color: white;
     }
-    .btn-back{
-        background-color: #c6c9cc;
-        color: white;
-    }
     .hashtag{
         background-color: #a1bbf7;
         color: white;
@@ -151,7 +149,17 @@
     .udsection button{
         margin-left: 10px
     }
-
+    .product-description{
+        background-color: transparent;
+        border: none;
+        resize: none;
+        width: 100%;
+        min-height: 50px;
+    }
+    .product-info{
+        margin-top: 10px;
+        margin-bottom: 5px;
+    }
 </style>
 <div class="container text-center">
     <div class="text-end">
@@ -204,7 +212,7 @@
                     </tr>
                     <tr>
                         <td>제품설명</td>
-                        <td>{{ p.description }}</td>
+                        <td><textarea class="product-description" disabled>{{ p.description }}</textarea></td>
                     </tr>
                 </tbody>
             </table>    
@@ -243,25 +251,26 @@
         </div>
     </div>
 
-    {% if user == p.seller %}
-        <div class="text-end udsection">
-            <a href="{% url 'products:update' p.id %}" class="btn btn-moong">게시글 수정</a>
-            <button type="button" onclick="checkRemove()" class="btn btn-moong">게시글 삭제</button>
-        </div>
-    {% endif %}
+    
 
 
     <input type="hidden" name="product_id" value="{{ p.id }}">
     <div class="productBtn">
-        {% if user in p.wishuser.all %}
-            <a href="{% url 'products:mine' p.id %}" class="btn btn-myprod-cancel">찜취소</a>
-        {% else %}
-            <a href="{% url 'products:mine' p.id %}" class="btn btn-myprod">찜하기</a>
+
+        {% if user == p.seller %}
+            <a href="{% url 'products:update' p.id %}" class="btn btn-moong">게시글 수정</a>
+            <a type="button" onclick="checkRemove()" class="btn btn-moong">게시글 삭제</a>
         {% endif %}
+
         {% if p.seller != user %}
+            {% if user in p.wishuser.all %}
+                <a href="{% url 'products:mine' p.id %}" class="btn btn-myprod-cancel">찜취소</a>
+            {% else %}
+                <a href="{% url 'products:mine' p.id %}" class="btn btn-myprod">찜하기</a>
+            {% endif %}
             <a href="{% url 'products:buy' %}?product_id={{ p.id }}" class="btn btn-buy">구매하기</a>
         {% endif %}
-        <a class="btn btn-back" onclick="goBackPage()">뒤로가기</a>
+        <a class="btn btn-moong" href="{% url 'products:index' %}?stockOut=false">목록으로</a>
     </div>
     
 
@@ -309,10 +318,6 @@
         element.textContent = timeSince(isoDateString);
     });
 
-    function goBackPage(){
-        window.history.back();
-    }
-
     function checkRemove(){
         const formData = new FormData();
         formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
@@ -330,6 +335,13 @@
             });
         };
     }
+    function autoResize() {
+            const textarea = document.querySelector('.product-description');
+            textarea.style.height = 'auto'; 
+            textarea.style.height = textarea.scrollHeight + 'px'; 
+        }
+        
+        window.onload = autoResize;
 </script>
 
 {% endblock %}

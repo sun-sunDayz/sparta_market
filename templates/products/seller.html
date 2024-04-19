@@ -101,6 +101,9 @@
         .following-list ul li {
             margin-bottom: 5px;
         }
+        .follow-tag{
+            margin-bottom: 10px;
+        }
     </style>
 
     <div class="container text-center">
@@ -116,10 +119,12 @@
                         <div class="follower-list">
                             
                             {% for follower in userdata.followers.all %} 
+                            <div class="follow-tag">
                                 <a href="{% url 'accounts:seller' follower.username %}">
                                     <img src="{{ follower.getpic }}" class="follow-icon">
                                     {{ follower.username }}
                                 </a>
+                            </div>
                             {% endfor %}
                             
                         </div>
@@ -129,10 +134,12 @@
                         <div class="follow-number">{{ userdata.following.count }}</div>
                         <div class="following-list">
                             {% for following in userdata.following.all %} 
+                            <div class="follow-tag">
                                 <a href="{% url 'accounts:seller' following.username %}">
                                     <img src="{{ following.getpic }}" class="follow-icon">
                                     {{ following.username }}
                                 </a>
+                            </div>  
                             {% endfor %}
                         </div>
                     </div>
